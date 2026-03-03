@@ -19,6 +19,11 @@
 
 # production
 /build
+/dist
+
+# project internal
+.bkit-memory.json
+.pdca-status.json
 
 # misc
 .DS_Store

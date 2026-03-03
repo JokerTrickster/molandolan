@@ -1,26 +1,37 @@
 {
-  "name": "molandolan",
-  "version": "0.1.0",
+  "name": "dragon-feeding-game",
+  "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
-    "next": "16.1.6",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "@pixi/particle-emitter": "^5.0.8",
+    "gsap": "^3.12.0",
+    "howler": "^2.2.4",
+    "pixi.js": "^7.3.0",
+    "xstate": "^4.38.3"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.6",
-    "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+    "@playwright/test": "^1.40.0",
+    "@types/howler": "^2.2.11",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "description": "Dragon Feeding Game - 떡먹는 용만이",
+  "keywords": [
+    "game",
+    "mobile",
+    "web",
+    "dragon",
+    "puzzle"
+  ],
+  "author": "",
+  "license": "MIT"
 }
