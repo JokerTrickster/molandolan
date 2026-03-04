@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "deploy": "npm run build && aws s3 sync out/ s3://$AWS_S3_BUCKET --delete && echo 'Deployed to S3'",
+    "deploy:invalidate": "npm run deploy && aws cloudfront create-invalidation --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION_ID --paths '/*'"
   },
   "dependencies": {
     "gsap": "^3.12.0",
