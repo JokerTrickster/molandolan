@@ -24,24 +24,20 @@ export const gameStateMachine = createMachine({
 
   states: {
     [GamePhase.INIT]: {
-      on: {
-        START: GamePhase.MENU
-      }
+      on: { START: GamePhase.MENU }
     },
 
     [GamePhase.MENU]: {
       on: {
         SELECT_DIFFICULTY: {
-          actions: assign({
-            difficulty: (_, event: any) => event.difficulty
-          })
+          actions: assign({ difficulty: (_: GameContext, event: any) => event.difficulty })
         },
         PLAY: GamePhase.READY
       }
     },
 
     [GamePhase.READY]: {
-      entry: assign((context) => {
+      entry: assign((context: GameContext) => {
         const roundConfig = RoundManager.getRoundConfig(context.round);
         const updates: Partial<GameContext> = {
           correctParrotId: null,
@@ -55,17 +51,17 @@ export const gameStateMachine = createMachine({
         }
         return updates;
       }),
-      after: {
-        3000: GamePhase.FEEDING
+      on: {
+        COUNTDOWN_DONE: GamePhase.FEEDING
       }
     },
 
     [GamePhase.FEEDING]: {
-      entry: assign((context) => ({
+      entry: assign((context: GameContext) => ({
         correctParrotId: Math.floor(Math.random() * context.parrotCount)
       })),
-      after: {
-        3000: GamePhase.SHUFFLING
+      on: {
+        FEEDING_DONE: GamePhase.SHUFFLING
       }
     },
 
@@ -73,9 +69,7 @@ export const gameStateMachine = createMachine({
       on: {
         SHUFFLE_COMPLETE: GamePhase.SELECTING,
         UPDATE_TIME: {
-          actions: assign({
-            timeRemaining: (_, event: any) => event.time
-          })
+          actions: assign({ timeRemaining: (_: GameContext, event: any) => event.time })
         }
       }
     },
@@ -84,35 +78,26 @@ export const gameStateMachine = createMachine({
       on: {
         SELECT_PARROT: {
           target: GamePhase.RESULT,
-          actions: assign({
-            selectedParrotId: (_, event: any) => event.parrotId
-          })
+          actions: assign({ selectedParrotId: (_: GameContext, event: any) => event.parrotId })
         }
       }
     },
 
     [GamePhase.RESULT]: {
       entry: [
-        assign((context) => {
+        assign((context: GameContext) => {
           const isCorrect = context.selectedParrotId === context.correctParrotId;
-
           if (isCorrect) {
             const roundMultiplier = RoundManager.getScoreMultiplier(context.round);
             const comboBonus = context.combo * 10;
             const baseScore = 100 * roundMultiplier;
-            const totalScore = baseScore + comboBonus;
-
             return {
-              score: context.score + totalScore,
+              score: context.score + baseScore + comboBonus,
               combo: context.combo + 1,
               round: context.round + 1
             };
-          } else {
-            return {
-              lives: context.lives - 1,
-              combo: 0
-            };
           }
+          return { lives: context.lives - 1, combo: 0 };
         })
       ],
       on: {
@@ -131,10 +116,7 @@ export const gameStateMachine = createMachine({
           },
           {
             target: GamePhase.GAME_OVER,
-            actions: assign({
-              isCleared: false,
-              clearTimeMs: 0
-            })
+            actions: assign({ isCleared: false, clearTimeMs: 0 })
           }
         ]
       }
@@ -143,7 +125,7 @@ export const gameStateMachine = createMachine({
     [GamePhase.GAME_OVER]: {
       on: {
         RESTART: {
-          target: GamePhase.MENU,
+          target: GamePhase.READY,
           actions: assign({
             round: 1,
             score: 0,

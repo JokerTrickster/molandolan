@@ -8,6 +8,7 @@ export class ShuffleEngine {
   private isShuffling: boolean = false;
   private shuffleTimeline: gsap.core.Timeline | null = null;
   private roundConfig: RoundConfig | null = null;
+  private canvasHeight: number = 600;
 
   constructor(difficulty: DifficultyLevel = DifficultyLevel.NORMAL) {
     this.difficulty = difficulty;
@@ -20,6 +21,10 @@ export class ShuffleEngine {
   public setRoundConfig(config: RoundConfig): void {
     this.roundConfig = config;
     this.duration = config.shuffleDuration;
+  }
+
+  public setCanvasHeight(height: number): void {
+    this.canvasHeight = height;
   }
 
   public async executeShuffle(parrots: Parrot[]): Promise<void> {
@@ -36,11 +41,10 @@ export class ShuffleEngine {
     let totalTime = 0;
 
     const settings = this.getDifficultySettings();
-    const swapInterval = this.duration / settings.numberOfSwaps;
 
     for (let i = 0; i < settings.numberOfSwaps; i++) {
       const swapPair = this.getRandomSwapPair(parrots.length);
-      const duration = swapInterval * settings.shuffleSpeed;
+      const duration = settings.shuffleSpeed;
       const delay = totalTime;
 
       // Create movement for first parrot
@@ -95,6 +99,8 @@ export class ShuffleEngine {
       movements.forEach(movement => {
         const parrot = parrots[movement.parrotId];
 
+        const arcH = Math.min(80, this.canvasHeight * 0.12);
+
         if (movement.curve === 'arc') {
           const fromX = movement.from.x;
           const fromY = movement.from.y;
@@ -109,9 +115,8 @@ export class ShuffleEngine {
             onUpdate: () => {
               const t = proxy.t;
               parrot.position.x = fromX + (toX - fromX) * t;
-              const arcHeight = Math.sin(t * Math.PI) * 60;
-              parrot.position.y = fromY + (toY - fromY) * t - arcHeight;
-              parrot.rotation = Math.sin(t * Math.PI * 2) * 0.3;
+              parrot.position.y = fromY + (toY - fromY) * t - Math.sin(t * Math.PI) * arcH;
+              parrot.rotation = Math.sin(t * Math.PI * 2) * 0.2;
             }
           }, startTime);
         } else if (movement.curve === 'bezier') {
@@ -120,7 +125,7 @@ export class ShuffleEngine {
           const toX = movement.to.x;
           const toY = movement.to.y;
           const cpX = (fromX + toX) / 2;
-          const cpY = (fromY + toY) / 2 - 50;
+          const cpY = (fromY + toY) / 2 - arcH;
 
           const proxy = { t: 0 };
           this.shuffleTimeline!.to(proxy, {
@@ -132,7 +137,7 @@ export class ShuffleEngine {
               const inv = 1 - t;
               parrot.position.x = inv * inv * fromX + 2 * inv * t * cpX + t * t * toX;
               parrot.position.y = inv * inv * fromY + 2 * inv * t * cpY + t * t * toY;
-              parrot.rotation = Math.sin(t * Math.PI * 2) * 0.3;
+              parrot.rotation = Math.sin(t * Math.PI * 2) * 0.2;
             }
           }, startTime);
         } else {
@@ -167,55 +172,32 @@ export class ShuffleEngine {
   }
 
   private getDifficultySettings() {
-    // If we have a round config, use it
     if (this.roundConfig) {
-      const baseSwaps = 8 + (this.roundConfig.complexityLevel * 3);
+      const swapCounts: Record<number, number> = { 1: 4, 2: 6, 3: 7 };
+      const numberOfSwaps = swapCounts[this.roundConfig.complexityLevel] ?? 9;
+      const minSwapDuration = 0.8;
+      const rawSpeed = this.duration / numberOfSwaps;
+      const shuffleSpeed = Math.max(rawSpeed, minSwapDuration);
+      const overlapRatio = this.roundConfig.complexityLevel <= 1 ? 0 : Math.min(0.2, (this.roundConfig.complexityLevel - 1) * 0.1);
+
       return {
-        shuffleSpeed: 1 / this.roundConfig.shuffleSpeed, // Invert for GSAP duration
-        shuffleComplexity: this.roundConfig.complexityLevel * 2,
-        numberOfSwaps: Math.min(baseSwaps, Math.floor(this.duration * 1.5)),
-        overlapRatio: Math.min(0.4, this.roundConfig.complexityLevel * 0.1),
+        shuffleSpeed,
+        shuffleComplexity: this.roundConfig.complexityLevel,
+        numberOfSwaps,
+        overlapRatio,
         visualAids: this.roundConfig.complexityLevel <= 1
       };
     }
 
-    // Fallback to difficulty-based settings
     switch (this.difficulty) {
       case DifficultyLevel.EASY:
-        return {
-          shuffleSpeed: 1.2,
-          shuffleComplexity: 3,
-          numberOfSwaps: 10,
-          overlapRatio: 0,
-          visualAids: true
-        };
-
+        return { shuffleSpeed: 1.5, shuffleComplexity: 1, numberOfSwaps: 4, overlapRatio: 0, visualAids: true };
       case DifficultyLevel.NORMAL:
-        return {
-          shuffleSpeed: 1.0,
-          shuffleComplexity: 5,
-          numberOfSwaps: 15,
-          overlapRatio: 0.2,
-          visualAids: false
-        };
-
+        return { shuffleSpeed: 1.2, shuffleComplexity: 2, numberOfSwaps: 6, overlapRatio: 0.1, visualAids: false };
       case DifficultyLevel.HARD:
-        return {
-          shuffleSpeed: 0.8,
-          shuffleComplexity: 8,
-          numberOfSwaps: 20,
-          overlapRatio: 0.4,
-          visualAids: false
-        };
-
+        return { shuffleSpeed: 1.0, shuffleComplexity: 3, numberOfSwaps: 9, overlapRatio: 0.2, visualAids: false };
       default:
-        return {
-          shuffleSpeed: 1.0,
-          shuffleComplexity: 5,
-          numberOfSwaps: 15,
-          overlapRatio: 0.2,
-          visualAids: false
-        };
+        return { shuffleSpeed: 1.2, shuffleComplexity: 2, numberOfSwaps: 6, overlapRatio: 0.1, visualAids: false };
     }
   }
 

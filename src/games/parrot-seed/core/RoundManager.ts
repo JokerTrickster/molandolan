@@ -13,37 +13,37 @@ export class RoundManager {
     {
       roundNumber: 1,
       parrotCount: 3,
-      shuffleSpeed: 1.0,
-      shuffleDuration: 10,
+      shuffleSpeed: 0.6,
+      shuffleDuration: 6,
       complexityLevel: 1
     },
     {
       roundNumber: 2,
       parrotCount: 3,
-      shuffleSpeed: 1.3,
-      shuffleDuration: 12,
+      shuffleSpeed: 0.8,
+      shuffleDuration: 7,
       complexityLevel: 2
     },
     {
       roundNumber: 3,
       parrotCount: 4,
-      shuffleSpeed: 1.5,
-      shuffleDuration: 13,
+      shuffleSpeed: 0.9,
+      shuffleDuration: 8,
       complexityLevel: 2
     },
     {
       roundNumber: 4,
       parrotCount: 4,
-      shuffleSpeed: 1.5,
-      shuffleDuration: 14,
+      shuffleSpeed: 1.0,
+      shuffleDuration: 9,
       complexityLevel: 3
     },
     {
       roundNumber: 5,
       parrotCount: 5,
-      shuffleSpeed: 1.5,
-      shuffleDuration: 15,
-      complexityLevel: 4
+      shuffleSpeed: 1.1,
+      shuffleDuration: 10,
+      complexityLevel: 3
     }
   ];
 

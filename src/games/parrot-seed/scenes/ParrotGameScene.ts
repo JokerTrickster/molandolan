@@ -25,7 +25,8 @@ export class ParrotGameScene extends BaseScene {
   private messageText!: PIXI.Text;
   private seed!: PIXI.Graphics;
   private countdownTimer: number = 0;
-  private shuffleTimer: number = 0;
+  private countdownActive: boolean = false;
+  private buttonsContainer: PIXI.Container | null = null;
 
   constructor(app: PIXI.Application) {
     super(app, SceneType.PARROT_GAME);
@@ -33,42 +34,31 @@ export class ParrotGameScene extends BaseScene {
   }
 
   public async init(): Promise<void> {
-    // Create containers
     this.gameContainer = new PIXI.Container();
     this.uiContainer = new PIXI.Container();
     this.addChild(this.gameContainer);
     this.addChild(this.uiContainer);
 
-    // Create background
     const background = new PIXI.Graphics();
     background.beginFill(0x87CEEB);
     background.drawRect(0, 0, this.app.screen.width, this.app.screen.height);
     background.endFill();
     this.gameContainer.addChild(background);
 
-    // Create parrots
     this.createParrots();
-
-    // Create UI
     this.createUI();
-
-    // Create seed
     this.createSeed();
-
-    // Setup state machine
     this.setupStateMachine();
   }
 
   private createParrots(): void {
-    // Start with max parrots (5) but only show what's needed per round
     const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E77E', '#A78BFA'];
-    const maxParrots = 5;
     const y = this.app.screen.height / 2;
 
-    for (let i = 0; i < maxParrots; i++) {
+    for (let i = 0; i < 5; i++) {
       const data: ParrotData = {
         id: i,
-        position: { x: 0, y }, // Will be set in updateParrotPositions
+        position: { x: 0, y },
         originalPosition: { x: 0, y },
         color: colors[i],
         number: i + 1,
@@ -79,7 +69,7 @@ export class ParrotGameScene extends BaseScene {
       const parrot = new Parrot(data);
       parrot.setInteractive(false);
       parrot.on('pointerdown', () => this.onParrotClick(i));
-      parrot.visible = false; // Start hidden
+      parrot.visible = false;
 
       this.parrots.push(parrot);
       this.gameContainer.addChild(parrot);
@@ -87,19 +77,25 @@ export class ParrotGameScene extends BaseScene {
   }
 
   private updateParrotPositions(count: number): void {
-    const spacing = 140;
-    const startX = (this.app.screen.width - ((count - 1) * spacing)) / 2;
-    const y = this.app.screen.height / 2;
+    const w = this.app.screen.width;
+    const padding = 50;
+    const maxSpacing = 140;
+    const spacing = count > 1 ? Math.min(maxSpacing, (w - padding * 2) / (count - 1)) : 0;
+    const totalWidth = (count - 1) * spacing;
+    const startX = (w - totalWidth) / 2;
+    const y = this.app.screen.height * 0.5;
+    const scaleFactor = Math.min(1, w / 420);
 
-    // Update positions and visibility
     for (let i = 0; i < this.parrots.length; i++) {
       if (i < count) {
         const newX = startX + i * spacing;
         this.parrots[i].data.position = { x: newX, y };
         this.parrots[i].data.originalPosition = { x: newX, y };
         this.parrots[i].position.set(newX, y);
+        this.parrots[i].scale.set(scaleFactor);
         this.parrots[i].visible = true;
         this.parrots[i].alpha = 1;
+        this.parrots[i].showNumber(true);
       } else {
         this.parrots[i].visible = false;
       }
@@ -107,64 +103,49 @@ export class ParrotGameScene extends BaseScene {
   }
 
   private createUI(): void {
-    // Score
+    const w = this.app.screen.width;
+    const s = Math.min(1, w / 400);
+    const baseFontSize = Math.round(24 * s);
+    const timerFontSize = Math.round(48 * s);
+    const msgFontSize = Math.round(28 * s);
+    const pad = Math.round(16 * s);
+
     this.scoreText = new PIXI.Text('점수: 0', {
-      fontFamily: 'Arial',
-      fontSize: 28,
-      fill: 0xFFFFFF,
-      fontWeight: 'bold',
-      stroke: 0x000000,
-      strokeThickness: 4
+      fontFamily: 'Arial', fontSize: baseFontSize, fill: 0xFFFFFF,
+      fontWeight: 'bold', stroke: 0x000000, strokeThickness: 3
     });
-    this.scoreText.position.set(20, 20);
+    this.scoreText.position.set(pad, pad);
     this.uiContainer.addChild(this.scoreText);
 
-    // Lives
     this.livesText = new PIXI.Text('❤️❤️❤️', {
-      fontFamily: 'Arial',
-      fontSize: 28,
-      fill: 0xFFFFFF
+      fontFamily: 'Arial', fontSize: baseFontSize, fill: 0xFFFFFF
     });
-    this.livesText.position.set(20, 60);
+    this.livesText.position.set(pad, pad + baseFontSize + 8);
     this.uiContainer.addChild(this.livesText);
 
-    // Round
     this.roundText = new PIXI.Text('라운드: 1', {
-      fontFamily: 'Arial',
-      fontSize: 28,
-      fill: 0xFFFFFF,
-      fontWeight: 'bold',
-      stroke: 0x000000,
-      strokeThickness: 4
+      fontFamily: 'Arial', fontSize: baseFontSize, fill: 0xFFFFFF,
+      fontWeight: 'bold', stroke: 0x000000, strokeThickness: 3
     });
     this.roundText.anchor.set(1, 0);
-    this.roundText.position.set(this.app.screen.width - 20, 20);
+    this.roundText.position.set(w - pad, pad);
     this.uiContainer.addChild(this.roundText);
 
-    // Timer
     this.timerText = new PIXI.Text('', {
-      fontFamily: 'Arial',
-      fontSize: 48,
-      fill: 0xFFD700,
-      fontWeight: 'bold',
-      stroke: 0x000000,
-      strokeThickness: 5
+      fontFamily: 'Arial', fontSize: timerFontSize, fill: 0xFFD700,
+      fontWeight: 'bold', stroke: 0x000000, strokeThickness: 5
     });
     this.timerText.anchor.set(0.5);
-    this.timerText.position.set(this.app.screen.width / 2, 80);
+    this.timerText.position.set(w / 2, Math.round(75 * s));
     this.uiContainer.addChild(this.timerText);
 
-    // Message
     this.messageText = new PIXI.Text('', {
-      fontFamily: 'Arial',
-      fontSize: 36,
-      fill: 0xFFFFFF,
-      fontWeight: 'bold',
-      stroke: 0x000000,
-      strokeThickness: 4
+      fontFamily: 'Arial', fontSize: msgFontSize, fill: 0xFFFFFF,
+      fontWeight: 'bold', stroke: 0x000000, strokeThickness: 3,
+      wordWrap: true, wordWrapWidth: w - pad * 4, align: 'center'
     });
     this.messageText.anchor.set(0.5);
-    this.messageText.position.set(this.app.screen.width / 2, 150);
+    this.messageText.position.set(w / 2, Math.round(135 * s));
     this.uiContainer.addChild(this.messageText);
   }
 
@@ -198,37 +179,45 @@ export class ParrotGameScene extends BaseScene {
 
     switch (phase) {
       case GamePhase.READY:
-        // Update parrot positions for current round
+        if (this.buttonsContainer) {
+          this.buttonsContainer.destroy({ children: true });
+          this.buttonsContainer = null;
+        }
         this.updateParrotPositions(context.parrotCount);
-
-        // Update shuffle engine with round config
+        this.shuffleEngine.setCanvasHeight(this.app.screen.height);
         if (context.roundConfig) {
           this.shuffleEngine.setRoundConfig(context.roundConfig);
         }
 
-        // Show round info
         const roundTitle = RoundManager.getRoundTitle(context.round);
         const roundDesc = RoundManager.getDifficultyDescription(context.round);
         this.showMessage(`${roundTitle}\n${roundDesc}`);
-
         this.resetParrots();
-        this.countdownTimer = 3;
+        this.updateUI();
+        this.startCountdown(3);
         break;
 
       case GamePhase.FEEDING:
-        this.showMessage('잘 보세요!');
+        this.timerText.text = '';
+        this.showMessage('잘 보세요! 🌻');
+        this.updateUI();
         await this.feedParrot();
+        await this.wait(0.5);
+        this.stateMachine.send('FEEDING_DONE');
         break;
 
       case GamePhase.SHUFFLING:
-        this.showMessage('');
-        this.shuffleTimer = context.roundConfig?.shuffleDuration || 15;
+        this.showMessage('잘 따라가세요!');
+        this.parrots.forEach(p => p.showNumber(false));
+        this.updateUI();
+        await this.wait(0.5);
         await this.startShuffle();
         break;
 
       case GamePhase.SELECTING:
         this.showMessage('어느 앵무새가 먹었나요?');
         this.enableSelection();
+        this.updateUI();
         break;
 
       case GamePhase.RESULT:
@@ -239,35 +228,38 @@ export class ParrotGameScene extends BaseScene {
         this.showGameOver();
         break;
     }
+  }
 
-    this.updateUI();
+  private startCountdown(seconds: number): void {
+    this.countdownTimer = seconds;
+    this.countdownActive = true;
   }
 
   private async feedParrot(): Promise<void> {
     const context = this.stateMachine.state.context;
-    const selectedParrot = this.parrots[context.correctParrotId];
+    const targetParrot = this.parrots[context.correctParrotId];
 
-    // Show seed
+    targetParrot.showHighlight(true);
+
     this.seed.visible = true;
     this.seed.position.set(
       this.app.screen.width / 2,
-      this.app.screen.height / 2 - 200
+      this.app.screen.height * 0.2
     );
 
-    // Animate seed to parrot
-    await new Promise(resolve => {
+    await new Promise<void>(resolve => {
       gsap.to(this.seed.position, {
-        x: selectedParrot.position.x,
-        y: selectedParrot.position.y - 30,
-        duration: 0.8,
+        x: targetParrot.position.x,
+        y: targetParrot.position.y - 30,
+        duration: 1.0,
         ease: "power2.inOut",
         onComplete: resolve
       });
     });
 
-    // Parrot eats seed
     this.seed.visible = false;
-    await selectedParrot.eat();
+    await targetParrot.eat();
+    targetParrot.showHighlight(false);
   }
 
   private async startShuffle(): Promise<void> {
@@ -278,10 +270,13 @@ export class ParrotGameScene extends BaseScene {
   }
 
   private enableSelection(): void {
-    this.parrots.forEach(parrot => {
-      parrot.setInteractive(true);
-      parrot.alpha = 1;
-    });
+    const context = this.stateMachine.state.context;
+    for (let i = 0; i < this.parrots.length; i++) {
+      if (i < context.parrotCount) {
+        this.parrots[i].setInteractive(true);
+        this.parrots[i].alpha = 1;
+      }
+    }
   }
 
   private onParrotClick(parrotId: number): void {
@@ -297,100 +292,96 @@ export class ParrotGameScene extends BaseScene {
     const context = this.stateMachine.state.context;
     const isCorrect = context.selectedParrotId === context.correctParrotId;
 
-    // Highlight correct parrot
+    this.parrots.forEach(p => p.showNumber(true));
     this.parrots[context.correctParrotId].showHighlight(true);
 
     if (isCorrect) {
       this.showMessage('정답입니다! 🎉');
-      // Success animation
       gsap.to(this.parrots[context.correctParrotId].scale, {
-        x: 1.2,
-        y: 1.2,
-        duration: 0.3,
-        yoyo: true,
-        repeat: 1
+        x: 1.3, y: 1.3, duration: 0.3, yoyo: true, repeat: 1
       });
     } else {
       this.showMessage('틀렸습니다! 😢');
-      // Wrong animation
       if (context.selectedParrotId !== null) {
         gsap.to(this.parrots[context.selectedParrotId], {
-          x: "+=10",
-          duration: 0.1,
-          repeat: 5,
-          yoyo: true
+          x: "+=10", duration: 0.1, repeat: 5, yoyo: true
         });
       }
     }
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    this.updateUI();
+    await this.wait(2);
 
-    // Reset highlights
     this.parrots.forEach(p => p.showHighlight(false));
-
     this.stateMachine.send('NEXT_ROUND');
   }
 
   private async showGameOver(): Promise<void> {
     const context = this.stateMachine.state.context;
     const eventBus = EventBus.getInstance();
-    const buttonsContainer = new PIXI.Container();
-    buttonsContainer.position.set(this.app.screen.width / 2, this.app.screen.height / 2 + 80);
+    const w = this.app.screen.width;
+    const s = Math.min(1, w / 400);
+
+    this.buttonsContainer = new PIXI.Container();
+    this.buttonsContainer.position.set(w / 2, this.app.screen.height / 2 + 80);
 
     if (context.isCleared) {
       const seconds = (context.clearTimeMs / 1000).toFixed(1);
-      this.showMessage(`클리어!\n${seconds}초`);
+      this.showMessage(`🎉 클리어!\n${seconds}초`);
 
       if (AuthService.getInstance().isLoggedIn()) {
         const rank = await ApiClient.getInstance().submitScore('parrot-seed', {
           clearTimeMs: context.clearTimeMs
         });
         if (rank !== null) {
-          this.showMessage(`클리어!\n${seconds}초\n${rank}위 달성!`);
+          this.showMessage(`🎉 클리어!\n${seconds}초\n${rank}위 달성!`);
         }
       }
     } else {
       this.showMessage(`게임 오버!\n최종 점수: ${context.score}`);
     }
 
+    const gap = Math.round(60 * s);
     const restartBtn = this.createButton('다시 하기', 0x4ECDC4);
     restartBtn.position.set(0, 0);
     restartBtn.on('pointerdown', () => {
       this.stateMachine.send('RESTART');
-      buttonsContainer.destroy();
     });
-    buttonsContainer.addChild(restartBtn);
+    this.buttonsContainer.addChild(restartBtn);
 
     const rankingBtn = this.createButton('랭킹 보기', 0xFFD700);
-    rankingBtn.position.set(0, 70);
+    rankingBtn.position.set(0, gap);
     rankingBtn.on('pointerdown', () => {
       eventBus.emit('ranking:show', { gameType: 'parrot-seed' });
     });
-    buttonsContainer.addChild(rankingBtn);
+    this.buttonsContainer.addChild(rankingBtn);
 
     const homeBtn = this.createButton('메인으로', 0xFF6B6B);
-    homeBtn.position.set(0, 140);
+    homeBtn.position.set(0, gap * 2);
     homeBtn.on('pointerdown', () => {
       eventBus.emit('menu:show');
     });
-    buttonsContainer.addChild(homeBtn);
+    this.buttonsContainer.addChild(homeBtn);
 
-    this.uiContainer.addChild(buttonsContainer);
+    this.uiContainer.addChild(this.buttonsContainer);
+    this.updateUI();
   }
 
   private createButton(label: string, color: number): PIXI.Container {
+    const w = this.app.screen.width;
+    const s = Math.min(1, w / 400);
+    const btnW = Math.round(150 * s);
+    const btnH = Math.round(44 * s);
     const container = new PIXI.Container();
     const bg = new PIXI.Graphics();
     bg.beginFill(color);
-    bg.drawRoundedRect(-80, -25, 160, 50, 16);
+    bg.drawRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 14);
     bg.endFill();
     container.addChild(bg);
 
     const text = new PIXI.Text(label, {
-      fontFamily: 'Arial',
-      fontSize: 22,
-      fill: 0xFFFFFF,
-      fontWeight: 'bold'
+      fontFamily: 'Arial', fontSize: Math.round(20 * s),
+      fill: 0xFFFFFF, fontWeight: 'bold'
     });
     text.anchor.set(0.5);
     container.addChild(text);
@@ -415,29 +406,25 @@ export class ParrotGameScene extends BaseScene {
     const context = this.stateMachine.state.context;
     this.scoreText.text = `점수: ${context.score}`;
     this.roundText.text = `라운드: ${context.round}`;
-
-    // Update lives display
-    let heartsText = '';
-    for (let i = 0; i < context.lives; i++) {
-      heartsText += '❤️';
-    }
-    this.livesText.text = heartsText;
+    let hearts = '';
+    for (let i = 0; i < context.lives; i++) hearts += '❤️';
+    this.livesText.text = hearts;
   }
 
   public update(deltaTime: number): void {
-    const state = this.stateMachine.state;
-
-    // Update countdown timer
-    if (state.value === GamePhase.READY && this.countdownTimer > 0) {
+    if (this.countdownActive && this.countdownTimer > 0) {
       this.timerText.text = Math.ceil(this.countdownTimer).toString();
       this.countdownTimer -= deltaTime;
-    } else if (state.value === GamePhase.SHUFFLING && this.shuffleTimer > 0) {
-      this.timerText.text = `${Math.ceil(this.shuffleTimer)}초`;
-      this.shuffleTimer -= deltaTime;
-      this.stateMachine.send({ type: 'UPDATE_TIME', time: this.shuffleTimer });
-    } else {
-      this.timerText.text = '';
+      if (this.countdownTimer <= 0) {
+        this.countdownActive = false;
+        this.timerText.text = '';
+        this.stateMachine.send('COUNTDOWN_DONE');
+      }
     }
+  }
+
+  private wait(seconds: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, seconds * 1000));
   }
 
   public destroy(): void {
