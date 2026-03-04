@@ -1,14 +1,25 @@
 import * as PIXI from 'pixi.js';
-import { SceneType } from '@/types';
+import { SceneType } from '~/types';
 
 export abstract class BaseScene extends PIXI.Container {
   protected app: PIXI.Application;
   public sceneType: SceneType;
+  private _initialized = false;
 
   constructor(app: PIXI.Application, sceneType: SceneType) {
     super();
     this.app = app;
     this.sceneType = sceneType;
+  }
+
+  public get initialized(): boolean {
+    return this._initialized;
+  }
+
+  public async initOnce(): Promise<void> {
+    if (this._initialized) return;
+    await this.init();
+    this._initialized = true;
   }
 
   public abstract init(): Promise<void>;

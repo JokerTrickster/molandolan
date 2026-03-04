@@ -1,13 +1,14 @@
 import * as PIXI from 'pixi.js';
 import { BaseScene } from './BaseScene';
-import { SceneType, GameType, RankEntry } from '@/types';
-import { EventBus } from '@/core/EventBus';
-import { ApiClient } from '@/core/ApiClient';
-import { AuthService } from '@/core/AuthService';
+import { SceneType, GameType, RankEntry } from '~/types';
+import { EventBus } from '~/core/EventBus';
+import { ApiClient } from '~/core/ApiClient';
+import { AuthService } from '~/core/AuthService';
 
 const TAB_CONFIG: { type: GameType; label: string }[] = [
-  { type: 'parrot-seed', label: '앵무새 게임' },
-  { type: 'dragon-feeding', label: '용만이 게임' }
+  { type: 'parrot-seed', label: '앵무새' },
+  { type: 'memory-card', label: '카드뒤집기' },
+  { type: 'hidden-parrot', label: '숨은앵무새' }
 ];
 
 export class RankingScene extends BaseScene {

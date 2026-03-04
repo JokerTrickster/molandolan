@@ -1,8 +1,7 @@
 import { gamesData } from "@/data/games";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import MemoryGame from "@/components/games/MemoryGame";
-import WhackAMole from "@/components/games/WhackAMole";
+import GameRenderer from "@/components/games/GameRenderer";
 
 export function generateStaticParams() {
   return gamesData.map((item) => ({ id: item.id }));
@@ -48,8 +47,7 @@ export default async function GamePlayPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
 
-        {id === "memory" && <MemoryGame />}
-        {id === "whack-a-mole" && <WhackAMole />}
+        <GameRenderer gameId={id} />
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 // Parrot Seed Game Types
 
-import { Vector2 } from '@/types';
+import { Vector2 } from '~/types';
 
 export enum GamePhase {
   INIT = 'init',

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
+import { AuthProvider } from "@/lib/auth-context";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -27,11 +28,13 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className="antialiased">
-        <div className="max-w-md mx-auto min-h-screen bg-white shadow-sm">
-          <Header />
-          <main className="pb-20">{children}</main>
-          <BottomNav />
-        </div>
+        <AuthProvider>
+          <div className="max-w-md mx-auto min-h-screen bg-white shadow-sm">
+            <Header />
+            <main className="pb-20">{children}</main>
+            <BottomNav />
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );

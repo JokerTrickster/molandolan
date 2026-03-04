@@ -1,11 +1,11 @@
 import * as PIXI from 'pixi.js';
 import { interpret } from 'xstate';
 import gsap from 'gsap';
-import { BaseScene } from '@/scenes/BaseScene';
-import { SceneType } from '@/types';
-import { EventBus } from '@/core/EventBus';
-import { ApiClient } from '@/core/ApiClient';
-import { AuthService } from '@/core/AuthService';
+import { BaseScene } from '~/scenes/BaseScene';
+import { SceneType } from '~/types';
+import { EventBus } from '~/core/EventBus';
+import { ApiClient } from '~/core/ApiClient';
+import { AuthService } from '~/core/AuthService';
 import { Parrot } from '../entities/Parrot';
 import { ShuffleEngine } from '../core/ShuffleEngine';
 import { gameStateMachine } from '../core/GameStateMachine';

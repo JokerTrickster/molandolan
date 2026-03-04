@@ -9,7 +9,7 @@ export default function NewsPage() {
         <p className="text-xs text-muted mt-1">최신 소식과 이벤트를 확인하세요</p>
       </div>
 
-      <div className="px-4 space-y-3 pb-6">
+      <div className="px-4 space-y-3 pb-8">
         {newsData.map((item) => (
           <NewsCard key={item.id} item={item} />
         ))}

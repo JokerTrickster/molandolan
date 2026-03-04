@@ -1,4 +1,4 @@
-import { GameEvent, EventHandler } from '@/types';
+import { GameEvent, EventHandler } from '~/types';
 
 export class EventBus {
   private static instance: EventBus;

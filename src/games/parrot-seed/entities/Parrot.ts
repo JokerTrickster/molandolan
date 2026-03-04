@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import gsap from 'gsap';
-import { Vector2 } from '@/types';
+import { Vector2 } from '~/types';
 import { ParrotData } from '../types';
 
 export class Parrot extends PIXI.Container {

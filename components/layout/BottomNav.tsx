@@ -23,21 +23,32 @@ const navItems = [
     ),
   },
   {
-    href: "/shop",
-    label: "굿즈",
-    icon: (active: boolean) => (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8">
-        <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-      </svg>
-    ),
-  },
-  {
     href: "/games",
     label: "게임",
     icon: (active: boolean) => (
       <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8">
         <rect x="2" y="6" width="20" height="12" rx="2" />
         <path d="M6 12h4M8 10v4M14 10h.01M18 12h.01" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    href: "/gallery",
+    label: "갤러리",
+    icon: (active: boolean) => (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <circle cx="8.5" cy="8.5" r="1.5" />
+        <path d="M21 15l-5-5L5 21" />
+      </svg>
+    ),
+  },
+  {
+    href: "/shop",
+    label: "굿즈",
+    icon: (active: boolean) => (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8">
+        <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
       </svg>
     ),
   },
@@ -60,14 +71,14 @@ export default function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center w-16 h-14 rounded-xl transition-colors ${
+              className={`flex flex-col items-center justify-center w-14 h-14 rounded-xl transition-colors ${
                 active
                   ? "text-primary"
                   : "text-muted hover:text-foreground"
               }`}
             >
               {item.icon(active)}
-              <span className={`text-[10px] mt-1 font-medium ${active ? "text-primary" : ""}`}>
+              <span className={`text-[10px] mt-0.5 font-medium ${active ? "text-primary" : ""}`}>
                 {item.label}
               </span>
             </Link>

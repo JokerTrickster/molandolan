@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
-import { BaseScene } from '@/scenes/BaseScene';
-import { SceneType } from '@/types';
+import { BaseScene } from '~/scenes/BaseScene';
+import { SceneType } from '~/types';
 
 export class SceneManager {
   private app: PIXI.Application;
@@ -28,9 +28,8 @@ export class SceneManager {
       this.app.stage.removeChild(this.currentScene);
     }
 
-    // Enter new scene
     this.currentScene = newScene;
-    await this.currentScene.init();
+    await this.currentScene.initOnce();
     this.app.stage.addChild(this.currentScene);
     this.currentScene.onEnter();
   }

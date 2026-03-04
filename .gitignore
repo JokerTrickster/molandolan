@@ -44,3 +44,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# screenshots and browser test artifacts
+screenshot*.png
+game-*.png
+test-*.png
+console-*.txt

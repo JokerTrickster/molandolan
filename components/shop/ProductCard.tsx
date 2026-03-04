@@ -26,7 +26,7 @@ export default function ProductCard({ product }: { product: Product }) {
           )}
         </div>
         <div className="p-3">
-          <h3 className="text-sm font-bold text-foreground line-clamp-1">{product.name}</h3>
+          <h3 className="text-sm font-bold text-foreground line-clamp-2 leading-tight">{product.name}</h3>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-base font-bold text-primary">
               {product.price.toLocaleString()}원

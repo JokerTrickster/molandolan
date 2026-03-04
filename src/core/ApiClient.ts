@@ -1,4 +1,4 @@
-import { RankEntry, GameType } from '@/types';
+import { RankEntry, GameType } from '~/types';
 import { AuthService } from './AuthService';
 
 interface SubmitScoreData {
@@ -25,7 +25,7 @@ export class ApiClient {
   private authService: AuthService;
 
   private constructor() {
-    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+    this.baseUrl = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:8080';
     this.authService = AuthService.getInstance();
   }
 

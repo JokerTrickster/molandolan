@@ -2,6 +2,7 @@ import Link from "next/link";
 import { newsData } from "@/data/news";
 import { productsData } from "@/data/products";
 import { gamesData } from "@/data/games";
+import { galleryData } from "@/data/gallery";
 import NewsCard from "@/components/news/NewsCard";
 import ProductCard from "@/components/shop/ProductCard";
 import GameCard from "@/components/games/GameCard";
@@ -27,11 +28,12 @@ export default function Home() {
 
       {/* Category Quick Links */}
       <section className="px-4 -mt-5 relative z-10">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-2">
           {[
             { href: "/news", icon: "📰", label: "소식", bg: "bg-violet-50" },
             { href: "/shop", icon: "🛍️", label: "굿즈", bg: "bg-pink-50" },
             { href: "/games", icon: "🎮", label: "게임", bg: "bg-amber-50" },
+            { href: "/gallery", icon: "📷", label: "갤러리", bg: "bg-teal-50" },
           ].map((cat) => (
             <Link
               key={cat.href}
@@ -81,7 +83,7 @@ export default function Home() {
       </section>
 
       {/* Mini Games */}
-      <section className="px-4 mt-8 mb-6">
+      <section className="px-4 mt-8">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-black text-foreground">미니 게임</h2>
           <Link href="/games" className="text-xs font-semibold text-primary">
@@ -91,6 +93,25 @@ export default function Home() {
         <div className="space-y-3">
           {gamesData.map((game) => (
             <GameCard key={game.id} game={game} />
+          ))}
+        </div>
+      </section>
+
+      {/* Gallery Preview */}
+      <section className="px-4 mt-8 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-black text-foreground">갤러리</h2>
+          <Link href="/gallery" className="text-xs font-semibold text-primary">
+            더보기 →
+          </Link>
+        </div>
+        <div className="grid grid-cols-3 gap-1 rounded-xl overflow-hidden">
+          {galleryData.slice(0, 6).map((post) => (
+            <Link key={post.id} href={`/gallery/${post.id}`}>
+              <div className="aspect-square bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center text-3xl hover:opacity-80 transition-opacity">
+                {post.imageUrl}
+              </div>
+            </Link>
           ))}
         </div>
       </section>
