@@ -8,6 +8,9 @@ export interface AuthUser {
   nickname: string;
   role: UserRole;
   token: string;
+  name?: string;
+  phone?: string;
+  address?: string;
 }
 
 interface AuthContextType {
@@ -16,6 +19,7 @@ interface AuthContextType {
   isAdmin: boolean;
   login: (nickname: string, password: string) => Promise<boolean>;
   logout: () => void;
+  updateProfile: (data: Partial<Pick<AuthUser, "name" | "phone" | "address">>) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -24,6 +28,7 @@ const AuthContext = createContext<AuthContextType>({
   isAdmin: false,
   login: async () => false,
   logout: () => {},
+  updateProfile: () => {},
 });
 
 const STORAGE_KEY = "molandolan_auth";
@@ -42,23 +47,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const persist = (u: AuthUser) => {
+    setUser(u);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+  };
+
   const login = async (nickname: string, password: string): Promise<boolean> => {
-    // TODO: Replace with actual API call
     const isAdmin = nickname === "admin" && password === "admin";
-    const authUser: AuthUser = {
+    persist({
       nickname,
       role: isAdmin ? "admin" : "user",
       token: `mock-token-${Date.now()}`,
-    };
-
-    setUser(authUser);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(authUser));
+    });
     return true;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem(STORAGE_KEY);
+  };
+
+  const updateProfile = (data: Partial<Pick<AuthUser, "name" | "phone" | "address">>) => {
+    if (!user) return;
+    persist({ ...user, ...data });
   };
 
   return (
@@ -69,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAdmin: user?.role === "admin",
         login,
         logout,
+        updateProfile,
       }}
     >
       {children}

@@ -1,6 +1,7 @@
 import { productsData } from "@/data/products";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import PurchaseButton from "@/components/shop/PurchaseButton";
 
 export function generateStaticParams() {
   return productsData.map((item) => ({ id: item.id }));
@@ -76,16 +77,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         </div>
 
         <div className="mt-8 sticky bottom-20">
-          <button
-            disabled={!product.inStock}
-            className={`w-full py-4 rounded-2xl text-base font-bold transition-all ${
-              product.inStock
-                ? "bg-gradient-to-r from-primary to-secondary text-white hover:opacity-90 active:scale-[0.98]"
-                : "bg-gray-200 text-gray-400 cursor-not-allowed"
-            }`}
-          >
-            {product.inStock ? "구매하기" : "품절"}
-          </button>
+          <PurchaseButton product={product} />
         </div>
       </div>
     </div>

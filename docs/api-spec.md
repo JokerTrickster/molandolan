@@ -984,6 +984,85 @@ interface GalleryComment {
 | DELETE | `/api/gallery/:id/comments/:commentId` | owner/admin | 댓글 삭제 |
 | **파일** | | | |
 | POST | `/api/upload` | admin | 이미지 업로드 |
+| **주문** | | | |
+| POST | `/api/orders` | 공개 | 주문 생성 (회원/비회원) |
+| GET | `/api/orders` | user | 내 주문 목록 |
+| GET | `/api/orders/:id` | user | 주문 상세 |
+| PATCH | `/api/orders/:id/status` | admin | 주문 상태 변경 |
+| GET | `/api/admin/orders` | admin | 전체 주문 목록 |
+| **회원 정보** | | | |
+| GET | `/api/auth/me` | user | 내 프로필 조회 |
+| PATCH | `/api/auth/me` | user | 프로필 수정 (이름, 전화번호, 배송지) |
+
+---
+
+### 7-1. 주문 API 상세
+
+#### POST `/api/orders` — 주문 생성
+
+**Request Body:**
+```json
+{
+  "productId": "1",
+  "quantity": 2,
+  "buyerName": "홍길동",
+  "buyerPhone": "010-1234-5678",
+  "address": "서울시 강남구 테헤란로 123",
+  "isMember": true
+}
+```
+
+**Response (201):**
+```json
+{
+  "id": "ORD-1709500000-abc1",
+  "productId": "1",
+  "productName": "모란이 봉제인형 (30cm)",
+  "unitPrice": 32000,
+  "quantity": 2,
+  "totalPrice": 64000,
+  "status": "pending",
+  "bankInfo": {
+    "bank": "국민은행",
+    "account": "123-456-789012",
+    "holder": "모란도란"
+  },
+  "createdAt": "2026-03-04T12:00:00Z"
+}
+```
+
+#### PATCH `/api/orders/:id/status` — 주문 상태 변경 (관리자)
+
+**Request Body:**
+```json
+{
+  "status": "paid"
+}
+```
+
+**status 값:** `pending`(입금대기) → `paid`(입금확인) → `shipping`(배송중) → `delivered`(배송완료)
+
+#### PATCH `/api/auth/me` — 프로필 수정
+
+**Request Body:**
+```json
+{
+  "name": "홍길동",
+  "phone": "010-1234-5678",
+  "address": "서울시 강남구 테헤란로 123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "nickname": "user1",
+  "name": "홍길동",
+  "phone": "010-1234-5678",
+  "address": "서울시 강남구 테헤란로 123",
+  "role": "user"
+}
+```
 
 ---
 
