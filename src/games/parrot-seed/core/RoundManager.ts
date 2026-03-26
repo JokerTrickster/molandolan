@@ -13,37 +13,42 @@ export class RoundManager {
     {
       roundNumber: 1,
       parrotCount: 3,
-      shuffleSpeed: 0.6,
+      shuffleSpeed: 0.5,
       shuffleDuration: 6,
-      complexityLevel: 1
+      complexityLevel: 1,
+      concurrentPairs: 1
     },
     {
       roundNumber: 2,
       parrotCount: 3,
-      shuffleSpeed: 0.8,
+      shuffleSpeed: 0.5,
       shuffleDuration: 7,
-      complexityLevel: 2
+      complexityLevel: 1,
+      concurrentPairs: 1
     },
     {
       roundNumber: 3,
       parrotCount: 4,
-      shuffleSpeed: 0.9,
+      shuffleSpeed: 0.5,
       shuffleDuration: 8,
-      complexityLevel: 2
+      complexityLevel: 2,
+      concurrentPairs: 2
     },
     {
       roundNumber: 4,
       parrotCount: 4,
-      shuffleSpeed: 1.0,
+      shuffleSpeed: 0.5,
       shuffleDuration: 9,
-      complexityLevel: 3
+      complexityLevel: 2,
+      concurrentPairs: 2
     },
     {
       roundNumber: 5,
       parrotCount: 5,
-      shuffleSpeed: 1.1,
+      shuffleSpeed: 0.5,
       shuffleDuration: 10,
-      complexityLevel: 3
+      complexityLevel: 3,
+      concurrentPairs: 2
     }
   ];
 
@@ -107,11 +112,11 @@ export class RoundManager {
    */
   public static getDifficultyDescription(round: number): string {
     const descriptions = [
-      '앵무새 3마리 - 천천히 섞기',
-      '앵무새 3마리 - 빠르게 섞기',
-      '앵무새 4마리 - 보통 속도',
-      '앵무새 4마리 - 빠른 속도',
-      '앵무새 5마리 - 최고 난이도'
+      '앵무새 3마리 - 하나씩 섞기',
+      '앵무새 3마리 - 하나씩 섞기',
+      '앵무새 4마리 - 동시에 섞기',
+      '앵무새 4마리 - 동시에 섞기',
+      '앵무새 5마리 - 동시에 섞기'
     ];
     const index = Math.min(Math.max(round - 1, 0), descriptions.length - 1);
     return descriptions[index];

@@ -36,6 +36,7 @@ export interface RoundConfig {
   shuffleSpeed: number;
   shuffleDuration: number;
   complexityLevel: number;
+  concurrentPairs: number;
 }
 
 export interface GameContext {

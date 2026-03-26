@@ -41,38 +41,53 @@ export class ShuffleEngine {
     let totalTime = 0;
 
     const settings = this.getDifficultySettings();
+    const concurrentPairs = this.roundConfig?.concurrentPairs ?? 1;
+    const curveType = this.difficulty === DifficultyLevel.HARD ? 'bezier' : 'arc';
 
-    for (let i = 0; i < settings.numberOfSwaps; i++) {
-      const swapPair = this.getRandomSwapPair(parrots.length);
-      const duration = settings.shuffleSpeed;
-      const delay = totalTime;
+    let swapsRemaining = settings.numberOfSwaps;
 
-      // Create movement for first parrot
-      movements.push({
-        parrotId: swapPair[0],
-        from: { ...parrots[swapPair[0]].data.position },
-        to: { ...parrots[swapPair[1]].data.position },
-        duration: duration,
-        delay: delay,
-        curve: this.difficulty === DifficultyLevel.HARD ? 'bezier' : 'arc'
-      });
+    while (swapsRemaining > 0) {
+      // How many pairs to swap simultaneously this batch
+      const batchSize = Math.min(concurrentPairs, swapsRemaining);
+      const usedIndices = new Set<number>();
+      const batchPairs: [number, number][] = [];
 
-      // Create movement for second parrot
-      movements.push({
-        parrotId: swapPair[1],
-        from: { ...parrots[swapPair[1]].data.position },
-        to: { ...parrots[swapPair[0]].data.position },
-        duration: duration,
-        delay: delay,
-        curve: this.difficulty === DifficultyLevel.HARD ? 'bezier' : 'arc'
-      });
+      for (let j = 0; j < batchSize; j++) {
+        const pair = this.getRandomSwapPairExcluding(parrots.length, usedIndices);
+        if (!pair) break;
+        batchPairs.push(pair);
+        usedIndices.add(pair[0]);
+        usedIndices.add(pair[1]);
+      }
 
-      // Update positions for next iteration
-      const tempPos = parrots[swapPair[0]].data.position;
-      parrots[swapPair[0]].data.position = parrots[swapPair[1]].data.position;
-      parrots[swapPair[1]].data.position = tempPos;
+      // Create movements for all pairs in this batch (same delay = simultaneous)
+      for (const [a, b] of batchPairs) {
+        movements.push({
+          parrotId: a,
+          from: { ...parrots[a].data.position },
+          to: { ...parrots[b].data.position },
+          duration: settings.shuffleSpeed,
+          delay: totalTime,
+          curve: curveType
+        });
 
-      totalTime += duration * (1 - settings.overlapRatio);
+        movements.push({
+          parrotId: b,
+          from: { ...parrots[b].data.position },
+          to: { ...parrots[a].data.position },
+          duration: settings.shuffleSpeed,
+          delay: totalTime,
+          curve: curveType
+        });
+
+        // Update logical positions after swap
+        const tempPos = { ...parrots[a].data.position };
+        parrots[a].data.position = { ...parrots[b].data.position };
+        parrots[b].data.position = tempPos;
+      }
+
+      swapsRemaining -= batchPairs.length;
+      totalTime += settings.shuffleSpeed;
     }
 
     return {
@@ -171,33 +186,45 @@ export class ShuffleEngine {
     return [first, second];
   }
 
+  private getRandomSwapPairExcluding(count: number, excluded: Set<number>): [number, number] | null {
+    const available = [];
+    for (let i = 0; i < count; i++) {
+      if (!excluded.has(i)) available.push(i);
+    }
+    if (available.length < 2) return null;
+
+    const firstIdx = Math.floor(Math.random() * available.length);
+    const first = available[firstIdx];
+    available.splice(firstIdx, 1);
+    const secondIdx = Math.floor(Math.random() * available.length);
+    const second = available[secondIdx];
+
+    return [first, second];
+  }
+
   private getDifficultySettings() {
     if (this.roundConfig) {
-      const swapCounts: Record<number, number> = { 1: 4, 2: 6, 3: 7 };
-      const numberOfSwaps = swapCounts[this.roundConfig.complexityLevel] ?? 9;
-      const minSwapDuration = 0.8;
-      const rawSpeed = this.duration / numberOfSwaps;
-      const shuffleSpeed = Math.max(rawSpeed, minSwapDuration);
-      const overlapRatio = this.roundConfig.complexityLevel <= 1 ? 0 : Math.min(0.2, (this.roundConfig.complexityLevel - 1) * 0.1);
+      const swapCounts: Record<number, number> = { 1: 4, 2: 6, 3: 8 };
+      const numberOfSwaps = swapCounts[this.roundConfig.complexityLevel] ?? 8;
 
       return {
-        shuffleSpeed,
+        shuffleSpeed: this.roundConfig.shuffleSpeed,
         shuffleComplexity: this.roundConfig.complexityLevel,
         numberOfSwaps,
-        overlapRatio,
+        overlapRatio: 0,
         visualAids: this.roundConfig.complexityLevel <= 1
       };
     }
 
     switch (this.difficulty) {
       case DifficultyLevel.EASY:
-        return { shuffleSpeed: 1.5, shuffleComplexity: 1, numberOfSwaps: 4, overlapRatio: 0, visualAids: true };
+        return { shuffleSpeed: 0.5, shuffleComplexity: 1, numberOfSwaps: 4, overlapRatio: 0, visualAids: true };
       case DifficultyLevel.NORMAL:
-        return { shuffleSpeed: 1.2, shuffleComplexity: 2, numberOfSwaps: 6, overlapRatio: 0.1, visualAids: false };
+        return { shuffleSpeed: 0.5, shuffleComplexity: 2, numberOfSwaps: 6, overlapRatio: 0, visualAids: false };
       case DifficultyLevel.HARD:
-        return { shuffleSpeed: 1.0, shuffleComplexity: 3, numberOfSwaps: 9, overlapRatio: 0.2, visualAids: false };
+        return { shuffleSpeed: 0.5, shuffleComplexity: 3, numberOfSwaps: 8, overlapRatio: 0, visualAids: false };
       default:
-        return { shuffleSpeed: 1.2, shuffleComplexity: 2, numberOfSwaps: 6, overlapRatio: 0.1, visualAids: false };
+        return { shuffleSpeed: 0.5, shuffleComplexity: 2, numberOfSwaps: 6, overlapRatio: 0, visualAids: false };
     }
   }
 
